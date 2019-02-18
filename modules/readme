@@ -1,0 +1,128 @@
+Principe
+
+Topic callback
+    desc
+        retour de l'arduino lors de la gestion avec succÃs d'un message vers un telerupteur/relais
+        cmd/a/b/c envoye -> en attente d'un message sur callback avec message cmd/a/b/c
+    format
+        topic
+            callback
+        message
+            cmd/[etage]/[piece]/[type]/[id|desc]
+        
+Topic log
+    desc
+        log venant de partout
+
+    format
+        topic
+            log/[level]/[origin]
+                orgin can be a function, an arduino id...
+        message
+            message, no specific format
+    exemple 
+        log/error/serialToMqtt blah blah
+
+Topic command
+    desc
+        les queues pour les echanges de commandes
+
+    to lights/led/plug
+        topic
+            cmd/[etage]/[piece]/[type]/[desc]
+                etage = etage_0 (sous-sol) | etage_1 (rdc) | etage_2 (1er etage) | exterieur
+                piece = cuisine | chambreelise | dressing | extdevant | ...
+                type = lampe | led | prise | sound
+                desc = plafond | tablechevet | tv | volplus | pause ...
+
+        message
+            ON or OFF or integer from 0 to 100 for dimmer
+    from switch
+        topic
+            cmd/[etage]/[piece]/switch/[id]
+                etage = etage_0 (sous-sol) | etage_1 (rdc) | etage_2 (1er etage) | exterieur
+                piece = cuisine | chambreelise | dressing | extdevant | ...
+                id = 1 | 2 | 3 ... (id du bouton sur l'interupteur)
+    
+        message
+            ON
+                Appui sur le switch 
+            OFF
+                Switch relachÃ©
+    from location event (owntrack)
+        topic
+            cmd/location/[chris|mel]
+        message
+            yyyymmdd hh24:mi:ss [home|crac|vermeg|unknown]
+    
+
+Topic persistence
+    desc
+        objectif : mettre les message cmd/[etage]/[<>switch]/# en retain de manière à pouvoir avoir accès à l'état des lampes à partir de n'importe où
+        service 'mqttPeristence' qui lit les commande sur les lampes et les envoie dans persistence/*
+    in
+        topic
+            cmd/[etage]/[piece]/[switch]/[desc]
+        message
+            ON / OFF
+    out
+        topic
+            persistence/cmd/[etage]/[piece]/[switch]/[desc]
+        message
+            ON/OFF
+
+Topic init
+    desc 
+        used to initialize the mapping pin <-> command topic in the arduinos
+    in 
+        topic
+            init/[arduinoId]/request
+                request by the arduino to initialize its map
+        message
+            x
+    out
+        topic
+            init/[arduinoId]/response
+                sends mapping info to the arduino
+        message
+            [topic to be used/used for that pin]#[pin]
+    out
+        topic
+            init/[arduinoId]/done
+                says to the arduino that all mapping info have been sent. It will set a flag 'mapLoaded' in the arduino so that the arduino can start the main loop
+        message
+            x 
+    int
+        topic
+            init/[arduinoId]/ready
+                arduino says it is ready. raspberry can stard sending command, like sending the state of each item
+        message
+            x
+            
+
+Todo
+    - faire les mqttToSerial et serialToMqtt en C pour accÃ©lÃ©rer
+        -> pas nÃ©cessaire ?
+        OK
+    - callback check
+        OK
+    - mapping dynamique ttyACMx et id -> OK ?
+        OK
+    - console web de monitoring (statut des services sur chaque rpi, possibilitÃ© de redÃmarrer...))
+        - main rpi
+            - same as secondary
+            - logger 
+            - openhab
+        - secondary rpis
+            - mqttToSerial_*
+            - serialToMqtt_*
+            - watcher (reset arduino if no answer)
+                - 1 by arduino ?
+        OK?
+    - en deconnectant / connectant le arduino, mqttToArduino doit etre relancÃ©-> gÃ©rÃ© dans le watchdog
+        OK? gere par le service auto restart
+    - bug plein de sous-process dans watche.sh -> ok
+        OK killSubProcess
+    - plus lent depuis le remplacement des fct publish/submit par des variable ??
+    - node-red pour conversion mqtt - arduino ?
+    - firmata pour comm rpi - arduino ?

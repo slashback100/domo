@@ -1,0 +1,16 @@
+[Unit]
+Description = Log all domotic events 
+#StartLimitBurst=10
+#StartLimitIntervalSec=60
+
+[Service]
+Type = simple
+ExecStart = /opt/domo/modules/logger.sh
+#ExecStop = /usr/bin/killall logger.sh
+RestartSec = 10
+Restart = always
+User=osmc
+Group=osmc
+
+[Install]
+WantedBy = multi-user.target

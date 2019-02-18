@@ -1,0 +1,4 @@
+#!/bin/bash
+id=${1:-etage1a}
+sudo service mqttToSerial_${id}.sh start
+sudo service serialToMqtt_${id}.sh start

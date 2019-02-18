@@ -1,0 +1,2 @@
+#!/bin/bash
+gcc -o arduiComm.o arduino-serial-lib.c arduiComm.c 

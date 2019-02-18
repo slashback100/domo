@@ -1,0 +1,100 @@
+String inputString = "";         // a String to hold incoming data
+boolean stringComplete = false;
+const String thisArduinoId="etage1a";
+long lastActivityTime = 0;
+// watchdog : https://folk.uio.no/jeanra/Microelectronics/ArduinoWatchdog.html
+/* ************************************************************************************* */
+/* Button setup */
+const int nbOutput = 11;
+const int nbInput = 30;
+static int lastButtonState[nbInput] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+static int lastButtonLevel[nbInput] = {HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH};
+static int buttonArray[nbInput] = {14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43};
+static int outputArray[nbOutput] = {2,3,4,5,6,7,8,9,10,11,12};
+int lastStatus = 0;
+#define DEBOUNCE_DELAY 50
+/* ************************************************************************************* */
+
+
+void setup(void) {
+  for(int i = 0; i < nbInput; i++){
+    pinMode(buttonArray[i], INPUT_PULLUP);
+  }
+  for(int i = 0; i < nbOutput; i++){
+    pinMode(outputArray[i], OUTPUT);
+    digitalWrite(outputArray[i], HIGH);
+  }
+  Serial.begin(9600);
+  delay(1000);
+}
+
+void loop(void) {
+  // check input 
+  for(int i = 0; i < nbInput; i++) {
+    processButtonDigital(i);
+  }
+    // check serial
+  if (stringComplete) {
+    String input = inputString;
+    int firstPound = input.indexOf("#");
+    int secondPound = input.indexOf("#", firstPound+1);
+    String arduinoId = input.substring(0, firstPound);
+    if (arduinoId == thisArduinoId){
+        String pinStr = input.substring(firstPound+1, secondPound);
+        String message = input.substring(secondPound+1);
+        
+        int pin = pinStr.toInt(); 
+        if(pin >= 2 /* 0 & 1 are for tx rx */  && pin <= 53){
+          if (message == "ON"){
+            digitalWrite(pin, LOW);
+            Serial.println("log/debug/arduino_1#successfully treated message "+message+" for arduino "+arduinoId+" pin "+String(pin));
+            Serial.println("callback#"+thisArduinoId+"#"+String(pin));
+          } else if ( message == "OFF"){
+            digitalWrite(pin, HIGH);
+            Serial.println("log/debug/arduino_1#successfully treated message "+message+" for arduino "+arduinoId+" pin "+String(pin));
+            Serial.println("callback#"+thisArduinoId+"#"+String(pin));
+          } else {
+            //message not recognized
+            Serial.println("log/error/arduino_1#failed to treat message "+message+" for arduino "+arduinoId+" pin "+String(pin));
+          }
+        //} else {
+          //message not for me
+          //Serial.println("log/warning/arduino_1#message received that couldn't be treated: "+inputString);
+        }
+    }
+    inputString = "";
+    stringComplete = false;
+  }
+}
+
+void serialEvent() {
+  while (Serial.available()) {
+    char inChar = (char)Serial.read();
+    if (inChar == '\n') {
+      stringComplete = true;
+    } else {
+      inputString += inChar;
+    }
+  }
+}
+
+void processButtonDigital(int buttonId){
+  int sensorReading = digitalRead(buttonArray[buttonId]);
+  if (sensorReading != lastButtonLevel[buttonId]){
+    lastActivityTime = millis();
+  }
+  if((sensorReading == LOW && lastButtonState[buttonId] == 0) /*was high*/ || 
+    (sensorReading == HIGH && lastButtonState[buttonId] == 1)) {  // potential change of state
+    if((millis() - lastActivityTime) > DEBOUNCE_DELAY){  // Proceed if we haven't seen a recent event on this button
+      lastActivityTime = millis();
+        
+      if (sensorReading == LOW) {
+        Serial.println(thisArduinoId+"#"+String(buttonArray[buttonId])+"#ON");
+      } else {
+        Serial.println(thisArduinoId+"#"+String(buttonArray[buttonId])+"#OFF");
+      }
+      lastButtonState[buttonId] = sensorReading == LOW ? 1 : 0;
+    }
+  }
+  lastButtonLevel[buttonId] = sensorReading;
+}

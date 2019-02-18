@@ -1,0 +1,15 @@
+#!/bin/bash
+# vim: set foldmethod=expr foldexpr=getline(v\:lnum)=~'^\\(function\\s\\)\\?[a-zA-Z0-9-_]*()'?1\:(getline(v\:lnum)=~'^}'?0\:'='):
+function sendMail() {
+    echo "" > /tmp/mailContent
+    email="christophe.desirant@gmail.com"
+    ifttt=trigger@applet.ifttt.com
+    echo "To: $ifttt" > /tmp/mailContent
+    echo "From: $email" >> /tmp/mailContent
+    echo "Subject: #test" >> /tmp/mailContent
+    echo >> /tmp/mailContent
+    echo "$@" >> /tmp/mailContent
+    cat /tmp/mailContent | sudo msmtp $ifttt
+}
+sendMail $@
+

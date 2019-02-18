@@ -1,0 +1,19 @@
+int i = 0;
+
+
+void setup(void) {
+  Serial.begin(9600);
+  Serial.println("starting");
+}
+
+void loop(void) {
+  if(i > 1000){
+    Serial.println("reset counter "+String(i));
+    i=0;
+  } else if(i == 500) {
+    Serial.println("middle"+String(i));
+  }
+  i++;
+  // check input 
+}
+

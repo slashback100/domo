@@ -1,0 +1,16 @@
+[Unit]
+Description = Check if one of the arduino treated the command
+#StartLimitBurst=10
+#StartLimitIntervalSec=60
+
+[Service]
+Type = simple
+ExecStart = /opt/domo/modules/watcher.sh
+#ExecStop = /usr/bin/killall watcher.sh
+RestartSec = 10
+Restart = always
+User=osmc
+Group=osmc
+
+[Install]
+WantedBy = multi-user.target

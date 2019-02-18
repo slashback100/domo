@@ -1,0 +1,7 @@
+#!/bin/bash
+availableSpace=$(df  | grep root | awk '{print $4}')
+limit=50000 # 100 Mo
+if [ $availableSpace -lt $limit ]
+then
+    /opt/domo/tools/sendiphoneNotif "RPI2 disk space is below limit ($limit) ! ($availableSpace)"
+fi
