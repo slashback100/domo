@@ -1,8 +1,8 @@
-#!/bin/bash
+g!/bin/bash
 . /opt/domo/modules/functions.sh
-facadeAvant="md/etage1a/out/12"
+facadeAvant="cmd/etage1a/out/12"
 function isDark(){
-    local json=`wget -q -O - 'http://api.openweathermap.org/data/2.5/weather?q=Amay,be&units=metric&APPID=ddcf9bc810a94458cb877f54dbb9ffa5'`
+    local json=`wget -q -O - 'http://api.openweathermap.org/data/2.5/weather?q=Amay,be&units=metric&APPID='"$openweatherapi"`
     local sunrise=`echo $json|sed 's/^.*"sunrise":\([0-9]*\).*$/\1/g'`
     local sunset=`echo $json|sed 's/^.*"sunset":\([0-9]*\).*$/\1/g'`
     local h=`date +%s`
